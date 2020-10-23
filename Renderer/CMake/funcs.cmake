@@ -1,0 +1,38 @@
+function(target_add_spirv_shader TARGET INPUT_FILE)
+    find_program(GLSLC glslc)
+    set(optionalArgs ${ARGN})
+    set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader-spv")
+    list(LENGTH optionalArgs numArgs)
+    if(${numArgs} GREATER 1)
+        message(FATAL_ERROR "target_add_spirv_shader called incorrectly, add_spirv_shader(target INPUT_FILE [OUTPUT_FILE])")
+    endif()
+    if(${numArgs} EQUAL 1)
+        list(GET optionalArgs 0 OUTPUT_DIR)
+    endif()
+    file(MAKE_DIRECTORY ${OUTPUT_DIR})
+    get_filename_component(bare_name ${INPUT_FILE} NAME_WE)
+    get_filename_component(extension ${INPUT_FILE} LAST_EXT)
+    string(REGEX REPLACE "[.]+" "" extension ${extension})
+    set(OUTPUT_FILE "${OUTPUT_DIR}/${bare_name}-${extension}.spv")
+    add_custom_command( PRE_BUILD
+            OUTPUT ${OUTPUT_FILE}
+            COMMAND ${GLSLC} ${INPUT_FILE} -o ${OUTPUT_FILE}
+            MAIN_DEPENDENCY ${INPUT_FILE}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            )
+    add_custom_target(${bare_name}-${extension} DEPENDS ${OUTPUT_FILE})
+    add_dependencies(${TARGET} ${bare_name}-${extension})
+endfunction()
+
+function(add_subdirectories curdir)
+    FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+    SET(dirlist "")
+    FOREACH(child ${children})
+        IF(IS_DIRECTORY ${curdir}/${child} AND EXISTS ${curdir}/${child}/CMakeLists.txt)
+            LIST(APPEND dirlist ${child})
+        ENDIF()
+    ENDFOREACH()
+    foreach(subdir ${dirlist})
+        add_subdirectory(${subdir})
+    endforeach()
+endfunction()
