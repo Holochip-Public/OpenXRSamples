@@ -1,0 +1,6 @@
+[submodule "External/KTX-Software"]
+	path = External/KTX-Software
+	url = https://github.com/KhronosGroup/KTX-Software.git
+[submodule "External/tinygltf"]
+	path = External/tinygltf
+	url = https://github.com/syoyo/tinygltf
