@@ -8,6 +8,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <imgui_internal.h>
 #include "VulkanUtil.h"
 #include "Vulkan/Initializers.h"
 #include "Vulkan/Debug.h"
@@ -318,7 +319,7 @@ namespace Util {
                 // Acquire the next image from the swap chain
                 VkResult result = swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer);
                 // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE) or no longer optimal for presentation (SUBOPTIMAL)
-                if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
+                if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR || ImGui::GetCurrentContext()->MovingWindow != nullptr)) {
                     windowResize();
                 } else {
                     VK_CHECK_RESULT(result)

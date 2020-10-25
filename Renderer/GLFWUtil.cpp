@@ -18,11 +18,11 @@ namespace Util {
 
             int count;
             std::vector<GLFWmonitor *> useMonitor;
-            GLFWmonitor **monitors = glfwGetMonitors(&count);
-            for (int i = 0; i < count; i++) {
-                GLFWmonitor *monitor = monitors[i];
-                useMonitor.push_back(monitor);
-            }
+//            GLFWmonitor **monitors = glfwGetMonitors(&count);
+//            for (int i = 0; i < count; i++) {
+//                GLFWmonitor *monitor = monitors[i];
+//                useMonitor.push_back(monitor);
+//            }
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
             window = glfwCreateWindow(width, height, title.c_str(), (useMonitor.size() > 1) ? useMonitor[1] : nullptr,
                                       nullptr);
