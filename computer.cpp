@@ -26,17 +26,17 @@
 */
 
 computer::computer()
-: VulkanUtil(false)
+: VulkanUtil(true)
 , pipelineLayout(nullptr)
 , descriptorSetLayouts()
 , descriptorSet(nullptr)
 {
-    title        = "glTF vertex skinning";
+    title        = "computer";
     camera.type  = Camera::CameraType::lookat;
-    camera.setPosition(glm::vec3(0.0f, 0.75f, -2.0f));
-    camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-    camera.setPerspective(60.0f, (float) width / (float) height, 0.1f, 256.0f);
-    settings.overlay = true;
+    camera.setPosition(glm::vec3(0.0f, 0.0f, -75.0f));
+    camera.setRotation(glm::vec3(-15.0f, 45.0f, 0.0f));
+    camera.setPerspective(60.0f, (float)width / (float)height, 1.0f, 256.0f);
+    settings.overlay = false;
 }
 
 computer::~computer()
@@ -69,15 +69,15 @@ void computer::buildCommandBuffers()
     VkCommandBufferBeginInfo cmdBufInfo = Initializers::commandBufferBeginInfo();
 
     VkClearValue clearValues[2];
-    clearValues[0].color = {{0.2f, 0.2f, 0.2f, 1.0f}};
+    clearValues[0].color = defaultClearColor;
     clearValues[1].depthStencil = {1.0f, 0};
 
     VkRenderPassBeginInfo renderPassBeginInfo    = Initializers::renderPassBeginInfo();
     renderPassBeginInfo.renderPass               = renderPass;
     renderPassBeginInfo.renderArea.offset.x      = 0;
     renderPassBeginInfo.renderArea.offset.y      = 0;
-    renderPassBeginInfo.renderArea.extent.width  = width;
-    renderPassBeginInfo.renderArea.extent.height = height;
+    renderPassBeginInfo.renderArea.extent.width = (wantOpenXR)?swapChain.getExtent().width:width;
+    renderPassBeginInfo.renderArea.extent.height = (wantOpenXR)?swapChain.getExtent().height:height;
     renderPassBeginInfo.clearValueCount          = 2;
     renderPassBeginInfo.pClearValues             = clearValues;
 

@@ -19,6 +19,14 @@ namespace Util {
         , view_config_type()
         , configuration_views(nullptr)
         , graphics_binding()
+        , formFactor()
+        , viewConfigurationType()
+        , environmentBlendMode()
+        , frameState()
+        , views(nullptr)
+        , is_running(false)
+        , is_visible(false)
+        , projectionView(nullptr)
         { }
 
         OpenXRUtil::~OpenXRUtil() {
@@ -90,6 +98,24 @@ namespace Util {
             }
 
             return true;
+        }
+
+        void OpenXRUtil::createProjectionViews() {
+            projectionView = (XrCompositionLayerProjectionView*)malloc(sizeof(XrCompositionLayerProjectionView) * view_count);
+
+            for (uint32_t i = 0; i < view_count; i++)
+                projectionView[i] = {
+                        .type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW,
+                        .subImage = {
+                                .swapchain = xrSwapChains[i],
+                                .imageRect = {
+                                        .extent = {
+                                                .width = (int32_t) configuration_views[i].recommendedImageRectWidth,
+                                                .height = (int32_t) configuration_views[i].recommendedImageRectHeight,
+                                        },
+                                },
+                        },
+                };
         }
 
         bool OpenXRUtil::initSpaces() {
@@ -517,6 +543,10 @@ namespace Util {
 
             free(views);
             return true;
+        }
+
+        XrPosef OpenXRUtil::getCurrentHeadPose() {
+
         }
     }
 }

@@ -84,10 +84,10 @@ void particlefire::buildCommandBuffers() {
 
         vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        VkViewport viewport = Initializers::viewport((float)width, (float)height, 0.0f, 1.0f);
+        VkViewport viewport = Initializers::viewport((float)renderPassBeginInfo.renderArea.extent.width, (float)height, 0.0f, 1.0f);
         vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
 
-        VkRect2D scissor = Initializers::rect2D(width, height, 0,0);
+        VkRect2D scissor = Initializers::rect2D(renderPassBeginInfo.renderArea.extent.width, renderPassBeginInfo.renderArea.extent.height, 0,0);
         vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
 
         VkDeviceSize offsets[1] = { 0 };
