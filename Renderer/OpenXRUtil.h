@@ -35,12 +35,14 @@ namespace Util {
             XrInstanceCreateInfo instanceCreateInfo;
             XrFrameState frameState;
             XrView * views;
+            XrCompositionLayerProjectionView* projectionView;
             bool is_visible;
             bool is_running;
             std::vector<XrSwapchain> xrSwapChains;
             std::vector<uint32_t> xrSwapChainLengths;
             bool initSpaces();
             bool checkExtensions();
+            void createProjectionViews();
         public:
             OpenXRUtil(VulkanUtil * _app, const XrInstanceCreateInfo& ici);
             ~OpenXRUtil();
@@ -55,6 +57,7 @@ namespace Util {
             bool setupViews();
             void beginFrame();
             bool endFrame();
+            XrPosef getCurrentHeadPose();
         };
 
     }
