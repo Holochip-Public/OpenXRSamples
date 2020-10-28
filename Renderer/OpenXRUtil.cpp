@@ -5,6 +5,7 @@
 #include "OpenXRUtil.h"
 #include "OpenXR/CommonHelper.h"
 #include "VulkanUtil.h"
+#include "OpenXR/XrMath.h"
 
 namespace Util {
     namespace Renderer {
@@ -87,6 +88,9 @@ namespace Util {
             }
 
             if (!initSpaces())
+                return false;
+
+            if(!initActions())
                 return false;
 
             XrSessionBeginInfo sessionBeginInfo = {
@@ -455,12 +459,12 @@ namespace Util {
 
             XrEventDataBuffer runtimeEvent = {
                     .type = XR_TYPE_EVENT_DATA_BUFFER,
-                    .next = NULL,
+                    .next = nullptr,
             };
 
-            frameState = { XR_TYPE_FRAME_STATE };
-            XrFrameWaitInfo frameWaitInfo = { XR_TYPE_FRAME_WAIT_INFO };
-            if(XR_FAILED(xrWaitFrame(session, &frameWaitInfo, &frameState))) {
+            frameState = {XR_TYPE_FRAME_STATE};
+            XrFrameWaitInfo frameWaitInfo = {XR_TYPE_FRAME_WAIT_INFO};
+            if (XR_FAILED(xrWaitFrame(session, &frameWaitInfo, &frameState))) {
                 fprintf(stderr, "xrWaitframe() was not successful, exiting...\n");
                 assert(false);
                 return;
@@ -470,18 +474,23 @@ namespace Util {
             if (pollResult == XR_SUCCESS) {
                 switch (runtimeEvent.type) {
                     case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-                        XrEventDataSessionStateChanged* event =
-                                (XrEventDataSessionStateChanged*)&runtimeEvent;
+                        auto *event = (XrEventDataSessionStateChanged *) &runtimeEvent;
                         XrSessionState state = event->state;
                         is_visible = event->state <= XR_SESSION_STATE_FOCUSED;
-                        printf("EVENT: session state changed to %d. Visible: %d", state,
-                                  is_visible);
-                        if (event->state >= XR_SESSION_STATE_STOPPING) {
-                            is_running = false;
+                        printf("EVENT: session state changed to %d. Visible: %d\n", state, is_visible);
+                        switch (event->state) {
+                            case XR_SESSION_STATE_STOPPING:
+                            case XR_SESSION_STATE_EXITING:
+                            case XR_SESSION_STATE_LOSS_PENDING:
+                                is_running = false;
+                                is_visible = false;
+                                break;
+                            default:
+                                break;
                         }
-                        break;
                     }
-                    default: break;
+                    default:
+                        break;
                 }
             } else if (pollResult == XR_EVENT_UNAVAILABLE) {
                 // this is the usual case
@@ -501,28 +510,55 @@ namespace Util {
                     .space = local_space,
             };
 
-            views = (XrView*)malloc(sizeof(XrView) * view_count);
+            views = (XrView *) malloc(sizeof(XrView) * view_count);
             for (uint32_t i = 0; i < view_count; i++) {
 
-                views[i] = (XrView){ .type = XR_TYPE_VIEW };
+                views[i] = (XrView) {.type = XR_TYPE_VIEW};
+                views[i].next = nullptr;
             };
 
             XrViewState viewState = {
                     .type = XR_TYPE_VIEW_STATE,
             };
             uint32_t viewCountOutput;
-            if(XR_FAILED(xrLocateViews(session, &viewLocateInfo, &viewState,
-                                   view_count, &viewCountOutput, views))) {
+            if (XR_FAILED(xrLocateViews(session, &viewLocateInfo, &viewState,
+                                        view_count, &viewCountOutput, views))) {
                 fprintf(stderr, "Could not locate views\n");
                 assert(false);
                 return;
             }
 
             // --- Begin frame
-            XrFrameBeginInfo frameBeginInfo = { XR_TYPE_FRAME_BEGIN_INFO };
+            XrFrameBeginInfo frameBeginInfo = {XR_TYPE_FRAME_BEGIN_INFO};
 
-            if(XR_FAILED(xrBeginFrame(session, &frameBeginInfo))) {
+            if (XR_FAILED(xrBeginFrame(session, &frameBeginInfo))) {
                 assert(false);
+            }
+
+            // render each eye and fill projection_views with the result
+            for (uint32_t i = 0; i < view_count; i++) {
+                XrMatrix4x4f projection_matrix;
+                XrMatrix4x4f_CreateProjectionFov(&projection_matrix, GRAPHICS_OPENGL, views[i].fov,
+                                                 app->camera.getNearClip(), app->camera.getFarClip());
+
+                XrMatrix4x4f view_matrix;
+                XrMatrix4x4f_CreateViewMatrix(&view_matrix, &views[i].pose.position, &views[i].pose.orientation);
+
+                app->camera.matrices.perspective = {
+                        projection_matrix.m[0], projection_matrix.m[1], projection_matrix.m[2], projection_matrix.m[3],
+                        projection_matrix.m[4], projection_matrix.m[5], projection_matrix.m[6], projection_matrix.m[7],
+                        projection_matrix.m[8], projection_matrix.m[9], projection_matrix.m[10],
+                        projection_matrix.m[11],
+                        projection_matrix.m[12], projection_matrix.m[13], projection_matrix.m[14],
+                        projection_matrix.m[15]
+                };
+
+                app->camera.matrices.view = {
+                        view_matrix.m[0], view_matrix.m[1], view_matrix.m[2], view_matrix.m[3],
+                        view_matrix.m[4], view_matrix.m[5], view_matrix.m[6], view_matrix.m[7],
+                        view_matrix.m[8], view_matrix.m[9], view_matrix.m[10], view_matrix.m[11],
+                        view_matrix.m[12], view_matrix.m[13], view_matrix.m[14], view_matrix.m[15]
+                };
             }
         }
 
@@ -545,8 +581,56 @@ namespace Util {
             return true;
         }
 
-        XrPosef OpenXRUtil::getCurrentHeadPose() {
+        bool OpenXRUtil::initActions() {
+            XrActionSetCreateInfo actionSetInfo{XR_TYPE_ACTION_SET_CREATE_INFO};
+            std::strcpy(actionSetInfo.actionSetName, "mainactions");
+            std::strcpy(actionSetInfo.localizedActionSetName, "Main Actions");
+            if(XR_FAILED(xrCreateActionSet(instance, &actionSetInfo, &actionSet))) {
+                fprintf(stderr, "failed to create the action set!\n");
+                assert(false);
+                return false;
+            }
+            xrStringToPath(instance, "/user/hand/left", &hand_paths[HAND_LEFT]);
+            xrStringToPath(instance, "/user/hand/right", &hand_paths[HAND_RIGHT]);
 
+            XrActionCreateInfo actionInfo{XR_TYPE_ACTION_CREATE_INFO};
+            actionInfo.actionType = XR_ACTION_TYPE_BOOLEAN_INPUT;
+            std::strcpy(actionInfo.actionName, "exit_session");
+            std::strcpy(actionInfo.localizedActionName, "Exit session");
+            actionInfo.countSubactionPaths = static_cast<uint32_t>(HAND_COUNT);
+            actionInfo.subactionPaths = hand_paths;
+            if(XR_FAILED(xrCreateAction(actionSet, &actionInfo, &exitAction))) {
+                fprintf(stderr, "failed to create exit action.\n");
+                assert(false);
+                return false;
+            }
+
+            std::vector<XrActionSuggestedBinding> bindings;
+
+            XrPath select_click_path[HAND_COUNT];
+            xrStringToPath(instance, "/user/hand/left/input/menu/click", &select_click_path[HAND_LEFT]);
+            xrStringToPath(instance, "/user/hand/right/input/menu/click", &select_click_path[HAND_RIGHT]);
+            bindings.push_back({exitAction, select_click_path[HAND_LEFT]});
+            bindings.push_back({exitAction, select_click_path[HAND_RIGHT]});
+
+            XrInteractionProfileSuggestedBinding suggestedBindings{XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
+            XrPath interactionPath;
+            xrStringToPath(instance, "/interaction_profiles/khr/simple_controller", &interactionPath);
+            suggestedBindings.interactionProfile = interactionPath;
+            suggestedBindings.suggestedBindings = bindings.data();
+            suggestedBindings.countSuggestedBindings = static_cast<uint32_t>(bindings.size());
+            if(XR_FAILED(xrSuggestInteractionProfileBindings(instance, &suggestedBindings))) {
+                fprintf(stderr, "couldn't create exit binding\n");
+                assert(false);
+                return false;
+            }
+
+            return true;
+        }
+
+
+        XrPosef OpenXRUtil::getCurrentHeadPose() {
+            return views->pose;
         }
     }
 }

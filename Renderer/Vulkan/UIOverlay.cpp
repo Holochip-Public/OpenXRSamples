@@ -153,8 +153,8 @@ void UIOverlay::prepareResources() {
     style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
     style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(1.0f, 1.0f, 1.0f, 0.1f);
     style.Colors[ImGuiCol_FrameBgActive] = ImVec4(1.0f, 1.0f, 1.0f, 0.2f);
-    style.Colors[ImGuiCol_Button] = ImVec4(0.8f, 0.8f, 0.8f, 0.1f);
-    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.8f, 0.8f, 0.8f, 0.4f);
+    style.Colors[ImGuiCol_Button] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+    style.Colors[ImGuiCol_ButtonHovered] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
     style.Colors[ImGuiCol_ButtonActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
     // Dimensions
     ImGuiIO &io = ImGui::GetIO();
@@ -183,7 +183,7 @@ void UIOverlay::prepareResources() {
     ImGui::GetStyle().ScaleAllSizes(scale);
 
     // Upload ImGui fonts
-    io.Fonts->AddFontFromFileTTF(workDir.c_str(), 60.0f);
+    io.Fonts->AddFontFromFileTTF(workDir.c_str(), 16.0f);
     io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
     VkDeviceSize uploadSize = texWidth*texHeight * 4 * sizeof(char);
 
@@ -693,15 +693,12 @@ bool UIOverlay::GetWantCapture() {
             ImGui::NewFrame();
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-            ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x / 2, io.DisplaySize.y / 2));
-            ImGui::SetNextWindowSize(ImVec2(0, 0));
-            ImGui::Begin(appPtr->getWindowTitle().c_str(), nullptr, ImGuiWindowFlags_NoTitleBar);
-//            ImGui::TextUnformatted(appPtr->deviceProperties.deviceName);
-//            ImGui::Text("%.2f ms/frame (%.1f fps)", (1000.0f / appPtr->lastFPS), appPtr->lastFPS);
-            ImGui::Button("Launch the Hello World Demo");
-            ImGui::Button("Launch the gears");
-            ImGui::Button("Launch the Computer");
-
+            ImGui::SetNextWindowPos(ImVec2(10, 10));
+            ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+            ImGui::Begin(appPtr->getWindowTitle().c_str(), nullptr, static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize) | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+            ImGui::TextUnformatted(appPtr->title.c_str());
+            ImGui::TextUnformatted(appPtr->deviceProperties.deviceName);
+            ImGui::Text("%.2f ms/frame (%.1f fps)", (1000.0f / appPtr->lastFPS), appPtr->lastFPS);
 
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 5.0f * scale));
