@@ -16,6 +16,13 @@ class SwapChains;
 
 namespace Util {
     namespace Renderer {
+        enum OPENXR_HANDS
+        {
+            HAND_LEFT = 0,
+            HAND_RIGHT = 1,
+            HAND_COUNT
+        };
+
         class VulkanUtil;
         class OpenXRUtil {
             friend class VulkanUtil;
@@ -35,12 +42,17 @@ namespace Util {
             XrInstanceCreateInfo instanceCreateInfo;
             XrFrameState frameState;
             XrView * views;
+            XrPath hand_paths[HAND_COUNT];
             XrCompositionLayerProjectionView* projectionView;
             bool is_visible;
             bool is_running;
             std::vector<XrSwapchain> xrSwapChains;
             std::vector<uint32_t> xrSwapChainLengths;
+            XrActionSet actionSet;
+            XrAction exitAction;
+            float fov;
             bool initSpaces();
+            bool initActions();
             bool checkExtensions();
             void createProjectionViews();
         public:

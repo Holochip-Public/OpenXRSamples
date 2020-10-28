@@ -27,7 +27,7 @@ set(SOURCES
         OpenXR/Initializers.cpp
         OpenXR/CommonHelper.cpp
         Vulkan/GLTFModel.cpp
-        )
+        OpenXR/XrMath.h)
 
 set(IMGUI_DIR ${CMAKE_CURRENT_LIST_DIR}/../External/imgui)
 find_package(Vulkan REQUIRED)
