@@ -343,7 +343,7 @@ void SwapChains::cleanup() {
     swapChain = VK_NULL_HANDLE;
 }
 
-SwapChains::SwapChains()
+SwapChains::SwapChains(Util::Renderer::VulkanUtil * _app)
 : surface(VK_NULL_HANDLE)
 , instance()
 , device()
@@ -354,6 +354,7 @@ SwapChains::SwapChains()
 , imageCount(0)
 , queueNodeIndex(UINT32_MAX)
 , swapchainExtent()
+, app(_app)
 {
 
 }

@@ -1,6 +1,13 @@
-//
-// Created by lightfield on 3/22/19.
-//
+/*
+* OpenXR Example
+* Vulkan Example - CPU based fire particle system
+*
+* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
+* Changes to enable OpenXR Copyright (C) 2020 by Holochip Inc. - Steven Winston
+*
+* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+*/
+
 
 #ifndef LIGHTFIELD_VULKANUTIL_H
 #define LIGHTFIELD_VULKANUTIL_H
@@ -14,6 +21,7 @@
 #include "Camera.hpp"
 #include "GLFWUtil.h"
 #include "OpenXRUtil.h"
+#include "OpenXR/XRSwapChains.h"
 
 #include <chrono>
 
@@ -112,14 +120,14 @@ namespace Util {
             VkPipelineCache pipelineCache;
             // Wraps the swap chain to present images (framebuffers) to the windowing system
             SwapChains swapChain;
+            XRSwapChains xrSwapChains;
             // surface
             VkSurfaceKHR surface;
             Util::Renderer::GLFWUtil * glfwUtil;
 
+        public:
             OpenXRUtil openXrUtil;
             std::vector<const char*> openXRExtensions;
-
-        public:
             float lastFPS = 0;
             bool prepared = false;
             uint32_t width = 1280;

@@ -23,11 +23,10 @@ set(SOURCES
         GLFWUtil.cpp
         OpenXRUtil.cpp
         imguiExtras.cpp
-        OpenXR/quad.cpp
         OpenXR/Initializers.cpp
         OpenXR/CommonHelper.cpp
         Vulkan/GLTFModel.cpp
-        OpenXR/XrMath.h)
+        OpenXR/XrMath.h OpenXR/XRSwapChains.cpp OpenXR/XRSwapChains.h)
 
 set(IMGUI_DIR ${CMAKE_CURRENT_LIST_DIR}/../External/imgui)
 find_package(Vulkan REQUIRED)

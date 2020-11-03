@@ -12,7 +12,7 @@
 #include <openxr/openxr_platform.h>
 #include <vector>
 
-class SwapChains;
+class XRSwapChains;
 
 namespace Util {
     namespace Renderer {
@@ -43,33 +43,36 @@ namespace Util {
             XrFrameState frameState;
             XrView * views;
             XrPath hand_paths[HAND_COUNT];
-            XrCompositionLayerProjectionView* projectionView;
             bool is_visible;
             bool is_running;
-            std::vector<XrSwapchain> xrSwapChains;
-            std::vector<uint32_t> xrSwapChainLengths;
             XrActionSet actionSet;
             XrAction exitAction;
             float fov;
             bool initSpaces();
             bool initActions();
-            bool checkExtensions();
-            void createProjectionViews();
+
+            [[maybe_unused]] static bool checkExtensions();
         public:
             OpenXRUtil(VulkanUtil * _app, const XrInstanceCreateInfo& ici);
             ~OpenXRUtil();
 
             std::vector<XrSwapchainImageVulkanKHR> images;
             std::vector<VkImage> getImages();
+            XrCompositionLayerProjectionView* projectionView;
+            XrCompositionLayerProjection layer;
             bool createOpenXRInstance();
             bool initOpenXR(bool useLegacy = false);
-            bool setupSwapChain(SwapChains & swapChains);
             bool createOpenXRSystem();
 
             bool setupViews();
             void beginFrame();
             bool endFrame();
             XrPosef getCurrentHeadPose();
+            [[nodiscard]] XrSession getSession() const { return session; }
+            [[nodiscard]] uint32_t getViewCount() const { return view_count; }
+            [[nodiscard]] XrViewConfigurationView* getConfigViews() const { return configuration_views; }
+            [[nodiscard]] XrView* getXRViews() const { return views; }
+            void createProjectionViews(XRSwapChains * xrSwapChains);
         };
 
     }

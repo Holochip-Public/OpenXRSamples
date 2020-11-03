@@ -8,6 +8,12 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+namespace Util {
+    namespace Renderer {
+        class VulkanUtil;
+    }
+}
+
 #define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                        \
 {                                                                       \
 	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetInstanceProcAddr(inst, "vk"#entrypoint)); \
@@ -49,6 +55,7 @@ private:
     PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
     PFN_vkQueuePresentKHR fpQueuePresentKHR;
     VkExtent2D swapchainExtent;
+    Util::Renderer::VulkanUtil * app;
 public:
     VkFormat colorFormat;
     VkColorSpaceKHR colorSpace;
@@ -59,7 +66,7 @@ public:
     std::vector<SwapChainBuffer> buffers;
     /** @brief Queue family index of the detected graphics and presenting device queue */
     uint32_t queueNodeIndex;
-    SwapChains();
+    SwapChains(Util::Renderer::VulkanUtil * _app);
     VkSurfaceKHR getSurface() { return surface; }
     VkExtent2D getExtent() const { return swapchainExtent; }
     void setExtent(VkExtent2D extent) { swapchainExtent = extent; }

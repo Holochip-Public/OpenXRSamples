@@ -7,7 +7,7 @@ int main() {
     particlefire renderer;
     static bool quitKeyPressed = false;
 
-    renderer.wantOpenXR = true;
+    renderer.wantOpenXR = false;
     renderer.useLegacyOpenXR = true;
 
     //test creating the openxr init.  if this fails, then allow going back to glfw local window
