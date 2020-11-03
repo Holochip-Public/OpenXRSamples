@@ -1,6 +1,12 @@
-//
-// Created by lightfield on 3/22/19.
-//
+/*
+* OpenXR Example
+* Vulkan Example - CPU based fire particle system
+*
+* Copyright (C) 2016 by Sascha Willems - www.saschawillems.de
+* Changes to enable OpenXR Copyright (C) 2020 by Holochip Inc. - Steven Winston
+*
+* This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+*/
 
 #include <stdexcept>
 #include <imgui.h>
@@ -56,6 +62,8 @@ namespace Util {
             , openXrUtil(this, xrInstanceCreateInfo)
             , wantOpenXR(true)
             , useLegacyOpenXR(false)
+            , swapChain(this)
+            , xrSwapChains(this)
         {
             depthStencil.view = VK_NULL_HANDLE;
             depthStencil.image = VK_NULL_HANDLE;
@@ -102,6 +110,8 @@ namespace Util {
                 , openXrUtil(rhs.openXrUtil)
                 , wantOpenXR(rhs.wantOpenXR)
                 , useLegacyOpenXR(rhs.useLegacyOpenXR)
+                , swapChain(rhs.swapChain)
+                , xrSwapChains(rhs.xrSwapChains)
         {
 
         }
@@ -312,9 +322,10 @@ namespace Util {
         }
 
         void VulkanUtil::prepareFrame() {
-            if(wantOpenXR)
+            if(wantOpenXR) {
                 openXrUtil.beginFrame();
-            else {
+                swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer);
+            } else {
                 // Acquire the next image from the swap chain
                 VkResult result = swapChain.acquireNextImage(semaphores.presentComplete, &currentBuffer);
                 // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE) or no longer optimal for presentation (SUBOPTIMAL)
@@ -330,6 +341,8 @@ namespace Util {
             VkResult result = VK_SUCCESS;
             if(!wantOpenXR)
                 result = swapChain.queuePresent(queue, currentBuffer, semaphores.renderComplete);
+            else
+                result = xrSwapChains.queuePresent(queue, currentBuffer, semaphores.renderComplete);
             if (!((result == VK_SUCCESS) || (result == VK_SUBOPTIMAL_KHR))) {
                 if (result == VK_ERROR_OUT_OF_DATE_KHR) {
                     // Swap chain is no longer compatible with the surface and needs to be recreated
@@ -418,7 +431,10 @@ namespace Util {
             VkBool32 validDepthFormat = tools::getSupportedDepthFormat(physicalDevice, &depthFormat);
             assert(validDepthFormat);
 
-            swapChain.connect(instance, physicalDevice, device);
+            if(!wantOpenXR)
+                swapChain.connect(instance, physicalDevice, device);
+            else
+                xrSwapChains.connect(instance, physicalDevice, device);
 
             // Create synchronization objects
             syncDevices.initSemaphores(device, maxFramesInflight);
@@ -500,7 +516,10 @@ namespace Util {
             imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageCI.imageType = VK_IMAGE_TYPE_2D;
             imageCI.format = depthFormat;
-            imageCI.extent = { swapChain.getExtent().width, swapChain.getExtent().height, 1 };
+            if(!wantOpenXR)
+                imageCI.extent = { swapChain.getExtent().width, swapChain.getExtent().height, 1 };
+            else
+                imageCI.extent = { xrSwapChains.getExtent().width, xrSwapChains.getExtent().height, 1 };
             imageCI.mipLevels = 1;
             imageCI.arrayLayers = 1;
             imageCI.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -546,14 +565,22 @@ namespace Util {
             frameBufferCreateInfo.renderPass = renderPass;
             frameBufferCreateInfo.attachmentCount = 2;
             frameBufferCreateInfo.pAttachments = attachments;
-            frameBufferCreateInfo.width = swapChain.getExtent().width;
-            frameBufferCreateInfo.height = swapChain.getExtent().height;
+            if(!wantOpenXR) {
+                frameBufferCreateInfo.width = swapChain.getExtent().width;
+                frameBufferCreateInfo.height = swapChain.getExtent().height;
+            } else {
+                frameBufferCreateInfo.width = xrSwapChains.getExtent().width;
+                frameBufferCreateInfo.height = xrSwapChains.getExtent().height;
+            }
             frameBufferCreateInfo.layers = 1;
 
             // Create frame buffers for every swap chain image
             if(wantOpenXR)
-                swapChain.addImageViews(openXrUtil.getImages());
-            frameBuffers.resize(swapChain.imageCount);
+                xrSwapChains.addImageViews(openXrUtil.getImages());
+            if(!wantOpenXR)
+                frameBuffers.resize(swapChain.imageCount);
+            else
+                frameBuffers.resize(xrSwapChains.imageCount);
             for (uint32_t i = 0; i < frameBuffers.size(); i++)
             {
                 attachments[0] = swapChain.buffers[i].view;
@@ -565,7 +592,7 @@ namespace Util {
             std::vector<VkAttachmentDescription> attachments;
             attachments.resize(2);
             // Color attachment
-            attachments[0].format = swapChain.colorFormat;
+            attachments[0].format = (!wantOpenXR)?swapChain.colorFormat:xrSwapChains.colorFormat;
             attachments[0].flags = VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
             attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
             attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -723,12 +750,15 @@ namespace Util {
         void VulkanUtil::setupSwapChain() {
             if(!wantOpenXR)
                 swapChain.create(&width, &height, settings.vsync);
+            else
+                xrSwapChains.create(&width, &height, settings.vsync);
         }
 
         bool VulkanUtil::destroyVulkan() {
             // Clean up Vulkan resources
             syncDevices.destroySemaphores();
             swapChain.cleanup();
+            xrSwapChains.cleanup();
             if (descriptorPool != VK_NULL_HANDLE)
             {
                 vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -916,16 +946,7 @@ namespace Util {
                         assert(false);
                     }
                 }
-
-                if(!openXrUtil.setupSwapChain(swapChain)) {
-                    fprintf(stderr, "OpenXR swap chain failed\n");
-                    assert(false);
-                }
             }
-//            if (!xr_init(&xr, instance, device->physicalDevice, device->vulkanDevice,
-//                         vk_device->queue_family_indices.graphics, 0)) {
-//                xrg_log_e("OpenXR initialization failed.");
-//            }
 
             prepVulkan();
             prepare();
