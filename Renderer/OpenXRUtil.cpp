@@ -120,7 +120,7 @@ namespace Util {
                         },
                 };
 
-            layer = (XrCompositionLayerProjection){
+            layer = {
                     .type = XR_TYPE_COMPOSITION_LAYER_PROJECTION,
                     .layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT,
                     .space = local_space,
@@ -385,7 +385,7 @@ namespace Util {
             views = (XrView *) malloc(sizeof(XrView) * view_count);
             for (uint32_t i = 0; i < view_count; i++) {
 
-                views[i] = (XrView) {.type = XR_TYPE_VIEW};
+                views[i] = {.type = XR_TYPE_VIEW};
                 views[i].next = nullptr;
             }
 
