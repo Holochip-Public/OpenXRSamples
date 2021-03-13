@@ -4,12 +4,12 @@
 
 #include "CommonHelper.h"
 #include "Initializers.h"
-#ifdef WINDOWS
+#include <fstream>
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurDir _getcwd
 #else
 #include <unistd.h>
-#include <fstream>
 
 #define GetCurDir getcwd
 #endif

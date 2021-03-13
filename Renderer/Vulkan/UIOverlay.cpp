@@ -9,7 +9,7 @@
 #include "../imguiExtras.h"
 #include "Texture.h"
 
-#ifdef WINDOWS
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurDir _getcwd
 #else

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <fstream>
-#ifdef WINDOWS
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurDir _getcwd
 #else
@@ -49,7 +49,7 @@ std::vector<char> ReadShaderFile(const std::string & fileName) {
     GetCurDir( buff, FILENAME_MAX );
     std::string workDir(buff);
     workDir += "/" + fileName;
-    std::fstream file(workDir, file.in | file.ate);
+    std::fstream file(workDir, std::fstream::in | std::fstream::ate);
     uint64_t length = file.tellg();
     file.seekg(0);
     returnMe.resize(length);
