@@ -21,7 +21,7 @@ std::vector<char> ReadShader(const std::string & fileName) {
     GetCurDir( buff, FILENAME_MAX );
     std::string workDir(buff);
     workDir += "/" + fileName;
-    std::fstream file(workDir, std::fstream::in | std::fstream::ate);
+    std::fstream file(workDir, std::fstream::in | std::fstream::ate | std::fstream::binary);
     assert(file.is_open());
     uint64_t length = file.tellg();
     file.seekg(0);
