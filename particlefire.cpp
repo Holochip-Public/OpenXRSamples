@@ -231,7 +231,7 @@ void particlefire::updateParticles() {
 
 void particlefire::loadAssets() {
 
-    std::string workDir = std::filesystem::current_path().native();
+    std::string workDir = std::filesystem::current_path().string();
     workDir += "/../data/";
     // Particles
     textures.particles.smoke.loadFromFile(workDir + "textures/particle_smoke.ktx", VK_FORMAT_R8G8B8A8_UNORM, vulkanDevice, queue);

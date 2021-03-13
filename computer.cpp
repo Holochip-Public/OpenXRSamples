@@ -232,7 +232,7 @@ void computer::updateUniformBuffers()
 void computer::loadAssets()
 {
     std::string workDir;
-    workDir = std::filesystem::current_path().native();
+    workDir = std::filesystem::current_path().string();
     workDir += "/../data/models/texturedPC.glb";
     const uint32_t glTFLoadingFlags = static_cast<uint32_t>(Util::Renderer::vkglTF::FileLoadingFlags::PreTransformVertices) | Util::Renderer::vkglTF::FileLoadingFlags::PreMultiplyVertexColors | Util::Renderer::vkglTF::FileLoadingFlags::FlipY;
     glTFModel.loadFromFile(workDir, vulkanDevice, queue, glTFLoadingFlags);
