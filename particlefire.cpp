@@ -2,6 +2,10 @@
 // Created by swinston on 10/20/20.
 //
 
+#if defined(_MSC_VER)
+    #define _USE_MATH_DEFINES
+#endif 
+
 #include <Vulkan/Initializers.h>
 #include <filesystem>
 #include "particlefire.h"
