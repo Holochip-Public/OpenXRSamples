@@ -13,15 +13,13 @@ void SwapChains::initSurface(VkSurfaceKHR surface_) {
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, nullptr);
     assert(queueCount >= 1);
 
-    std::vector<VkQueueFamilyProperties> queueProps;
-    queueProps.reserve(queueCount);
+    std::vector<VkQueueFamilyProperties> queueProps(queueCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, &*queueProps.begin());
 
     // Iterate over each queue to learn whether it supports presenting:
     // Find a queue with present supporttrue
     // Will be used to present the swap chain images to the windowing system
-    std::vector<VkBool32> supportsPresent;
-    supportsPresent.reserve(queueCount);
+    std::vector<VkBool32> supportsPresent(queueCount);
     for (uint32_t i = 0; i < queueCount; i++)
     {
         fpGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
@@ -83,8 +81,7 @@ void SwapChains::initSurface(VkSurfaceKHR surface_) {
     VK_CHECK_RESULT(fpGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr))
     assert(formatCount > 0);
 
-    std::vector<VkSurfaceFormatKHR> surfaceFormats;
-    surfaceFormats.reserve(formatCount);
+    std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
     VK_CHECK_RESULT(fpGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, &*surfaceFormats.begin()))
 
     // If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
@@ -147,8 +144,7 @@ void SwapChains::create(uint32_t *width, uint32_t *height, bool vsync) {
     VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr))
     assert(presentModeCount > 0);
 
-    std::vector<VkPresentModeKHR> presentModes;
-    presentModes.reserve(presentModeCount);
+    std::vector<VkPresentModeKHR> presentModes(presentModeCount);
     VK_CHECK_RESULT(fpGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, &*presentModes.begin()))
 
     swapchainExtent = {};

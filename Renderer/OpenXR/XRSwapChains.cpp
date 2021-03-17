@@ -22,9 +22,9 @@ void XRSwapChains::create(uint32_t *width, uint32_t *height, bool vsync) {
             return;
         }
 
-        int64_t swapchainFormats[swapchainFormatCount];
+        std::vector<int64_t> swapchainFormats(swapchainFormatCount);
         if (XR_FAILED(xrEnumerateSwapchainFormats(app->openXrUtil.getSession(), swapchainFormatCount,
-                                                  &swapchainFormatCount, swapchainFormats))) {
+                                                  &swapchainFormatCount, swapchainFormats.data()))) {
             fprintf(stderr, "failed to enumerate swapchain formats\n");
             return;
         }

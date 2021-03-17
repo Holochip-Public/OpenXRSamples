@@ -2,6 +2,10 @@
 // Created by swinston on 10/20/20.
 //
 
+#if defined(_MSC_VER)
+    #define _USE_MATH_DEFINES
+#endif 
+
 #include <Vulkan/Initializers.h>
 #include <filesystem>
 #include "particlefire.h"
@@ -227,7 +231,7 @@ void particlefire::updateParticles() {
 
 void particlefire::loadAssets() {
 
-    std::string workDir = std::filesystem::current_path().native();
+    std::string workDir = std::filesystem::current_path().string();
     workDir += "/../data/";
     // Particles
     textures.particles.smoke.loadFromFile(workDir + "textures/particle_smoke.ktx", VK_FORMAT_R8G8B8A8_UNORM, vulkanDevice, queue);

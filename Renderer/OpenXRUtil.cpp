@@ -120,7 +120,7 @@ namespace Util {
                         },
                 };
 
-            layer = (XrCompositionLayerProjection){
+            layer = {
                     .type = XR_TYPE_COMPOSITION_LAYER_PROJECTION,
                     .layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT,
                     .space = local_space,
@@ -137,9 +137,9 @@ namespace Util {
                 return false;
             }
 
-            XrReferenceSpaceType referenceSpaces[referenceSpacesCount];
+            std::vector<XrReferenceSpaceType> referenceSpaces(referenceSpacesCount);
             if(XR_FAILED(xrEnumerateReferenceSpaces(session, referenceSpacesCount,
-                                                &referenceSpacesCount, referenceSpaces))) {
+                                                &referenceSpacesCount, referenceSpaces.data()))) {
                 fprintf(stderr, "Enumerating reference spaces failed!\n");
                 return false;
             }
@@ -182,13 +182,13 @@ namespace Util {
             XR_CHECK_RESULT(xrEnumerateInstanceExtensionProperties(
                     nullptr, 0, &instanceExtensionCount, nullptr))
 
-            XrExtensionProperties instanceExtensionProperties[instanceExtensionCount];
+            std::vector<XrExtensionProperties> instanceExtensionProperties(instanceExtensionCount);
             for(auto &&props : instanceExtensionProperties)
                 props.type = XR_TYPE_EXTENSION_PROPERTIES;
 
             XR_CHECK_RESULT(xrEnumerateInstanceExtensionProperties(nullptr, instanceExtensionCount,
                                                             &instanceExtensionCount,
-                                                            instanceExtensionProperties))
+                                                            instanceExtensionProperties.data()))
 
             for(auto props : instanceExtensionProperties) {
                 if(!strcmp(XR_KHR_VULKAN_ENABLE_EXTENSION_NAME, props.extensionName))
@@ -234,10 +234,10 @@ namespace Util {
                 return false;
             }
 
-            XrViewConfigurationType viewConfigurations[viewConfigurationCount];
+            std::vector<XrViewConfigurationType> viewConfigurations(viewConfigurationCount);
             if(XR_FAILED(xrEnumerateViewConfigurations(
                     instance, system_id, viewConfigurationCount,
-                    &viewConfigurationCount, viewConfigurations))) {
+                    &viewConfigurationCount, viewConfigurations.data()))) {
                 fprintf(stderr, "Failed to enumerate view configurations!\n");
                 return false;
             }
@@ -385,7 +385,7 @@ namespace Util {
             views = (XrView *) malloc(sizeof(XrView) * view_count);
             for (uint32_t i = 0; i < view_count; i++) {
 
-                views[i] = (XrView) {.type = XR_TYPE_VIEW};
+                views[i] = {.type = XR_TYPE_VIEW};
                 views[i].next = nullptr;
             }
 

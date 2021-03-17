@@ -4,12 +4,12 @@
 
 #include "CommonHelper.h"
 #include "Initializers.h"
-#ifdef WINDOWS
+#include <fstream>
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurDir _getcwd
 #else
 #include <unistd.h>
-#include <fstream>
 
 #define GetCurDir getcwd
 #endif
@@ -21,7 +21,7 @@ std::vector<char> ReadShader(const std::string & fileName) {
     GetCurDir( buff, FILENAME_MAX );
     std::string workDir(buff);
     workDir += "/" + fileName;
-    std::fstream file(workDir, std::fstream::in | std::fstream::ate);
+    std::fstream file(workDir, std::fstream::in | std::fstream::ate | std::fstream::binary);
     assert(file.is_open());
     uint64_t length = file.tellg();
     file.seekg(0);
